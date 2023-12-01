@@ -1,0 +1,90 @@
+[gd_scene load_steps=3 format=3 uid="uid://sy2n4ylidvqp"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_jbm56"]
+bg_color = Color(0.6, 0.6, 0.6, 0)
+border_width_left = 5
+border_width_top = 5
+border_width_right = 5
+border_width_bottom = 5
+border_color = Color(0.117647, 0.117647, 0.117647, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_oav0x"]
+bg_color = Color(0.294118, 0.423529, 0.588235, 1)
+
+[node name="HUD" type="CanvasLayer"]
+offset = Vector2(0, 48)
+transform = Transform2D(1, 0, 0, 1, 0, 48)
+
+[node name="Panel" type="Panel" parent="."]
+offset_left = 424.0
+offset_top = 167.0
+offset_right = 605.0
+offset_bottom = 291.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_jbm56")
+
+[node name="Label" type="Label" parent="."]
+offset_left = 424.0
+offset_top = 117.0
+offset_right = 506.0
+offset_bottom = 162.0
+theme_override_font_sizes/font_size = 30
+text = "NEXT"
+vertical_alignment = 1
+
+[node name="LevelLabel" type="Label" parent="."]
+offset_left = 424.0
+offset_top = 18.0
+offset_right = 614.0
+offset_bottom = 63.0
+theme_override_font_sizes/font_size = 30
+text = "LEVEL"
+autowrap_mode = 2
+
+[node name="ScoreLabel" type="Label" parent="."]
+offset_left = 424.0
+offset_top = 304.0
+offset_right = 520.0
+offset_bottom = 395.0
+theme_override_font_sizes/font_size = 30
+text = "SCORE"
+autowrap_mode = 2
+
+[node name="LinesLabel" type="Label" parent="."]
+offset_left = 424.0
+offset_top = 428.0
+offset_right = 509.0
+offset_bottom = 519.0
+theme_override_font_sizes/font_size = 30
+text = "LINES"
+autowrap_mode = 2
+
+[node name="GameOverLabel" type="Label" parent="."]
+offset_left = 100.0
+offset_top = 314.0
+offset_right = 280.0
+offset_bottom = 359.0
+theme_override_font_sizes/font_size = 30
+text = "GAME OVER"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="StartButton" type="Button" parent="."]
+offset_left = 424.0
+offset_top = 618.0
+offset_right = 615.0
+offset_bottom = 657.0
+theme_override_font_sizes/font_size = 28
+theme_override_styles/normal = SubResource("StyleBoxFlat_oav0x")
+theme_override_styles/hover = SubResource("StyleBoxFlat_oav0x")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_oav0x")
+text = "NEW GAME"
+
+[node name="PausedLabel" type="Label" parent="."]
+offset_left = 100.0
+offset_top = 72.0
+offset_right = 280.0
+offset_bottom = 117.0
+theme_override_font_sizes/font_size = 30
+text = "PAUSED"
+horizontal_alignment = 1
+vertical_alignment = 1
