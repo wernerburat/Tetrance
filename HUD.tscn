@@ -1,4 +1,4 @@
-[gd_scene load_steps=3 format=3 uid="uid://sy2n4ylidvqp"]
+[gd_scene load_steps=3 format=3 uid="uid://d0fdhcpfc1uqy"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_jbm56"]
 bg_color = Color(0.6, 0.6, 0.6, 0)
@@ -42,18 +42,18 @@ autowrap_mode = 2
 
 [node name="ScoreLabel" type="Label" parent="."]
 offset_left = 424.0
-offset_top = 304.0
+offset_top = 462.0
 offset_right = 520.0
-offset_bottom = 395.0
+offset_bottom = 553.0
 theme_override_font_sizes/font_size = 30
 text = "SCORE"
 autowrap_mode = 2
 
 [node name="LinesLabel" type="Label" parent="."]
 offset_left = 424.0
-offset_top = 428.0
+offset_top = 540.0
 offset_right = 509.0
-offset_bottom = 519.0
+offset_bottom = 631.0
 theme_override_font_sizes/font_size = 30
 text = "LINES"
 autowrap_mode = 2

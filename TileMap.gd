@@ -36,6 +36,10 @@ var next_piece_type
 var rotation_index : int = 0
 var active_piece : Array
 
+#hold vars
+var just_held_piece : bool = false
+var held_piece : Array
+
 #game vars
 var level : int = 1
 var score : int
@@ -47,6 +51,7 @@ var game_running : bool
 var tile_id : int = 0
 var piece_atlas : Vector2i
 var next_piece_atlas : Vector2i
+var held_piece_atlas : Vector2i
 
 #layer vars
 var board_layer : int = 0
@@ -58,11 +63,12 @@ var ghost_layer : int = 3
 func _ready():
 	new_game()
 	start_btn.pressed.connect(new_game)
-	
+
 func new_game():
 	#reset vars
 	das_started = false
 	das_moving = false
+	game_running = true
 
 	score = 0
 	lines = 0
@@ -72,8 +78,8 @@ func new_game():
 	update_lines()
 
 	speed = 1.0
-	game_running = true
 	steps = [0, 0, 0] #0: left, 1:right, 2:down
+
 	gameover_label.hide()
 	paused_label.hide()
 	clear_piece()
@@ -111,35 +117,27 @@ func update_ghost():
 	draw_piece(active_piece, ghost_pos, piece_atlas, ghost_layer)
 
 func handle_inputs():
-	handle_game_inputs()
-	
 	if game_running:
 		handle_translate_inputs()
-		handle_rotate_inputs()
-
-	
-func handle_game_inputs():
-	if Input.is_action_just_pressed("Pause"):
-		toggle_pause()
-	if Input.is_action_just_pressed("Restart"):
-		new_game()
-	
+		
 func handle_translate_inputs():
 	if Input.is_action_pressed("PieceDown"):
 		is_soft_dropping = true
 		steps[2] += 10
 	else:
 		is_soft_dropping = false
-
+		
+	if Input.is_action_just_pressed("PieceHardDrop"):
+		hard_drop()
+		
 	if Input.is_action_pressed("PieceLeft"):
 		handle_das_input(0)
 	elif Input.is_action_pressed("PieceRight"):
 		handle_das_input(1)
 	else:
 		reset_das()
-		
-var das_speed = 40
 
+var das_speed = 40
 func handle_das_input(dir):
 	if das_moving:
 		steps[dir] += 40
@@ -158,19 +156,7 @@ func reset_das():
 	steps[1] = 0
 	das_started = false
 	das_moving = false
-	
-func handle_rotate_inputs():
-	if Input.is_action_just_pressed("Piece180"):
-		rotate_piece(1)
-		rotate_piece(1)
-	elif Input.is_action_just_pressed("RotateLeft"):
-		rotate_piece(-1)
-	elif Input.is_action_just_pressed("RotateRight"):
-		rotate_piece(1)
-		
-	if Input.is_action_just_pressed("PieceHardDrop"):
-		hard_drop()
-		
+
 func hard_drop():
 	var cells = 0
 	while(can_move(Vector2i.DOWN)):
@@ -179,15 +165,6 @@ func hard_drop():
 	lock_piece()
 	score_hard_drop(cells)
 
-
-func toggle_pause():
-	if game_running:
-		game_running = false
-		paused_label.show()
-	else:
-		game_running = true
-		paused_label.hide()
-	
 func pick_piece():
 	var piece
 	if not shapes.is_empty():
@@ -198,7 +175,7 @@ func pick_piece():
 		shapes.shuffle()
 		piece = shapes.pop_front()
 	return piece
-	
+
 func create_piece():
 	#reset vars
 	rotation_index = 0
@@ -208,11 +185,32 @@ func create_piece():
 	draw_piece(active_piece, cur_pos, piece_atlas)
 	# show next piece
 	draw_piece(next_piece_type[0], Vector2i(14,6), next_piece_atlas)
+	
+func hold_piece():
+	if !just_held_piece:
+		just_held_piece = true
+		if !held_piece:
+			held_piece_atlas = piece_atlas
+			draw_piece(piece_type[0], Vector2i(14,9), held_piece_atlas)
+			held_piece = piece_type
+			clear_panel()
+			clear_piece()
+			get_next_piece()
+		else:
+			var temp_piece = piece_type
+			clear_held()
+			draw_piece(piece_type[0], Vector2i(14, 9), piece_atlas)
+			piece_atlas = Vector2i(shapes_full.find(held_piece), 0)
+			piece_type = held_piece
+			held_piece = temp_piece
+			clear_piece()
+
+		create_piece()
 
 func clear_piece():
 	for i in active_piece:
 		erase_cell(active_layer, cur_pos + i)
-		
+
 func clear_ghost_layer():
 	for i in range(ROWS + 2):
 		for j in range(COLS + 1):
@@ -240,19 +238,23 @@ func move_piece(dir):
 	else:
 		if dir == Vector2i.DOWN:
 			lock_piece()
-			
+
 func lock_piece():
 	land_piece()
 	check_rows()
+	
+	get_next_piece()
 
+	create_piece()
+	check_game_over()
+	just_held_piece = false
+	
+func get_next_piece():
 	piece_type = next_piece_type
 	piece_atlas = next_piece_atlas
 	next_piece_type = pick_piece()
 	next_piece_atlas = Vector2i(shapes_full.find(next_piece_type), 0)
-
 	clear_panel()
-	create_piece()
-	check_game_over()
 
 func can_move(dir, pos = cur_pos):
 	#check if there is space to move
@@ -279,7 +281,7 @@ func is_free(pos):
 	if get_cell_source_id(board_top_layer, pos) != -1:
 		free = false
 	return free
-	
+
 func land_piece():
 	#remove each segment from active layer and move to board layer
 	for i in active_piece:
@@ -289,6 +291,11 @@ func land_piece():
 func clear_panel():
 	for i in range(14, 19):
 		for j in range(5, 9):
+			erase_cell(active_layer, Vector2i(i, j))
+
+func clear_held():
+	for i in range(14, 19):
+		for j in range(9, 14):
 			erase_cell(active_layer, Vector2i(i, j))
 
 func check_rows():
@@ -305,27 +312,27 @@ func check_rows():
 			lines_cleared += 1
 		else:
 			row -= 1
-	
+
 	score_line_clears(lines_cleared)
 
 func score_soft_drop():
 	#called on each cell while soft_dropping
 	score += 1
 	update_score()
-	
+
 func score_hard_drop(cells):
 	#amount of cells dropped * 2
 	cells = min(20, cells)
-	score += cells * 2 
+	score += cells * 2
 	update_score()
-	
+
 func score_line_clears(lines_cleared):
 	const REWARDS = [0, 100, 300, 500, 800]
 	score += REWARDS[lines_cleared] * level
 	lines += lines_cleared
 	update_score()
 	update_lines()
-	
+
 func check_level():
 	var new_level = roundi(lines / 10) + 1
 	if new_level != level:
@@ -336,10 +343,10 @@ func check_level():
 func update_score():
 	score_label.text = "SCORE " + str(score)
 	check_level()
-	
+
 func update_lines():
 	lines_label.text = "LINES " + str(lines)
-	
+
 func update_level():
 	level_label.text = "LEVEL " + str(level)
 
@@ -364,3 +371,20 @@ func check_game_over():
 			land_piece()
 			gameover_label.show()
 			game_running = false
+
+
+func _on_input_handler_new_game():
+	new_game()
+
+func _on_input_handler_toggle_pause():
+	game_running = !game_running
+	if (!game_running):
+		paused_label.show()
+	else:
+		paused_label.hide()
+
+func _on_input_handler_rotate_piece(dir):
+	rotate_piece(dir)
+	
+func _on_input_handler_hold_piece():
+	hold_piece()
